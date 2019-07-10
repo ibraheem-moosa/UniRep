@@ -1,0 +1,36 @@
+inputs 		--> (batch_size, input_size)
+wmx		--> (input_size, hidden_size)
+h_prev		--> (batch_size, hidden_size)
+wmh		--> (hidden_size, hidden_size)
+m		--> (batch_size, hidden_size)
+wh		--> (hidden_size, 4 * hidden_size)
+b		--> (4 * hidden_size,)
+wx		--> (input_size, 4 * hidden_size)
+z		--> (batch_size, 4 * hidden_size)
+i		--> (batch_size, hidden_size)
+f		--> (batch_size, hidden_size)
+o		--> (batch_size, hidden_size)
+u		--> (batch_size, hidden_size)
+c		--> (batch_size, hidden_size)
+ 
+
+Pytorch LSTMCell
+
+(W_ii ^ W_if ^ W_ig ^ W_io) >> weight_ih (input_size, 4 * hidden_size)
+(W_hi ^ W_hf ^ W_hg ^ W_ho) >> weight_hh (hidden_size, 4 * hidden_size))
+
+
+Pytorch model paramters correspondance
+
+wx		--> _lstm_cell.weight_ih_v
+gx		--> _lstm_cell.weight_ih_g
+wh		--> _lstm_cell.weight_hh_v
+gh		--> _lstm_cell.weight_hh_g
+b		--> _lstm_cell.bias_ih
+
+_lstm_cell.bias_hh should be set to zero
+
+wmx		--> _i_multiplier.weight_v
+gmx		--> _i_multiplier.weight_g
+wmh		--> _h_multiplier.weight_v
+gmh		--> _h_multiplier.weight_g
