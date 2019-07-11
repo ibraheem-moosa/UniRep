@@ -1,7 +1,9 @@
+import torch
 from torch.nn import Module
 from torch.nn import ModuleList
 from torch.nn import LSTMCell
 from torch.nn import Linear
+from torch.nn import Embedding
 from torch.nn.utils import weight_norm
 
 class mLSTMCell(Module):
@@ -57,3 +59,40 @@ class mLSTMCellStacked(Module):
             next_state.append((h, c))
         return next_state
         
+
+import numpy
+def load_1900(weight_dir):
+    name_fmt = '/rnn_mlstm_mlstm_{}:0.npy'
+    b = numpy.load(weight_dir + name_fmt.format('b'))
+    wx = numpy.load(weight_dir + name_fmt.format('wx'))
+    gx = numpy.load(weight_dir + name_fmt.format('gx'))
+    wh = numpy.load(weight_dir + name_fmt.format('wh'))
+    gh = numpy.load(weight_dir + name_fmt.format('gh'))
+    wmx = numpy.load(weight_dir + name_fmt.format('wmx'))
+    gmx = numpy.load(weight_dir + name_fmt.format('gmx'))
+    wmh = numpy.load(weight_dir + name_fmt.format('wmh'))
+    gmh = numpy.load(weight_dir + name_fmt.format('gmh'))
+
+    mlstm = mLSTMCell(10, 1900)
+    mlstm._lstm_cell.bias_ih.data = torch.from_numpy(b)
+    mlstm._lstm_cell.bias_hh.data *= 0.
+    mlstm._lstm_cell.weight_ih_v.data = torch.from_numpy(wx.transpose())
+    mlstm._lstm_cell.weight_ih_g.data = torch.from_numpy(gx.reshape(-1,1))
+    mlstm._lstm_cell.weight_hh_v.data = torch.from_numpy(wh.transpose())
+    mlstm._lstm_cell.weight_hh_g.data = torch.from_numpy(gh.reshape(-1,1))
+    mlstm._i_multiplier.weight_v.data = torch.from_numpy(wmx.transpose())
+    mlstm._i_multiplier.weight_g.data = torch.from_numpy(gmx.reshape(-1,1))
+    mlstm._h_multiplier.weight_v.data = torch.from_numpy(wmh.transpose())
+    mlstm._h_multiplier.weight_g.data = torch.from_numpy(gmh.reshape(-1,1))
+
+    embedding = Embedding(26, 10)
+    emb_weight = numpy.load(weight_dir + '/embed_matrix:0.npy')
+    embedding.weight.data = torch.from_numpy(emb_weight)
+
+    return embedding, mlstm
+
+
+embedding, mlstm = load_1900('./1900_weights')
+h,c = mlstm.forward(embedding(torch.LongTensor([1, 2, 3, 4])))
+print(h.shape)
+print(c.shape)
